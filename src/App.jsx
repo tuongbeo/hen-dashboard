@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import FacilitatorGate from './components/FacilitatorGate'
 import DataGuide from './components/DataGuide'
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Line, LineChart,
@@ -56,6 +57,7 @@ function SectionTitle({ icon: Icon, title, description }) {
 
 function Dashboard() {
   const [activeTab, setActiveTab] = useState('dashboard')
+  const [facilitatorUnlocked, setFacilitatorUnlocked] = useState(false)
   const switchTab = (tab) => { setActiveTab(tab); window.scrollTo({ top: 0, behavior: 'instant' }); window.history.replaceState(null, '', window.location.pathname + window.location.search) }
   return (
     <div className="min-h-screen bg-slate-50">
@@ -76,7 +78,7 @@ function Dashboard() {
           </div>
         </div>
         <div role="tablist" aria-label="Nội dung Hẹn Analytics" className="mx-auto flex max-w-[1500px] gap-2 px-4 pb-3 sm:px-6 lg:px-8">
-          {[['dashboard', 'Dashboard'], ['guide', 'Hướng dẫn']].map(([id, label], index) => <button key={id} id={`tab-${id}`} type="button" role="tab" aria-selected={activeTab === id} aria-controls={`panel-${id}`} tabIndex={activeTab === id ? 0 : -1} onClick={() => switchTab(id)} onKeyDown={event => { if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) { event.preventDefault(); const next = event.key === 'Home' ? 'dashboard' : event.key === 'End' ? 'guide' : index === 0 ? 'guide' : 'dashboard'; switchTab(next); document.getElementById(`tab-${next}`).focus() } }} className={`rounded-lg px-4 py-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 ${activeTab === id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{label}</button>)}
+          {[['dashboard', 'Dashboard'], ['guide', 'Hướng dẫn'], ['facilitator', 'Facilitator']].map(([id, label], index) => <button key={id} id={`tab-${id}`} type="button" role="tab" aria-selected={activeTab === id} aria-controls={`panel-${id}`} tabIndex={activeTab === id ? 0 : -1} onClick={() => switchTab(id)} onKeyDown={event => { if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) { event.preventDefault(); const ids = ['dashboard', 'guide', 'facilitator']; const next = event.key === 'Home' ? ids[0] : event.key === 'End' ? ids[2] : ids[(index + (event.key === 'ArrowRight' ? 1 : 2)) % 3]; switchTab(next); document.getElementById(`tab-${next}`).focus() } }} className={`rounded-lg px-4 py-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 ${activeTab === id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{label}</button>)}
         </div>
       </header>
 
@@ -286,6 +288,7 @@ function Dashboard() {
         </div>
         </div>}
         {activeTab === 'guide' && <div role="tabpanel" id="panel-guide" aria-labelledby="tab-guide"><DataGuide /></div>}
+        {activeTab === 'facilitator' && <div role="tabpanel" id="panel-facilitator" aria-labelledby="tab-facilitator"><FacilitatorGate unlocked={facilitatorUnlocked} onUnlock={() => setFacilitatorUnlocked(true)} onLock={() => setFacilitatorUnlocked(false)} /></div>}
         <footer className="border-t border-slate-200 py-5 text-center text-[11px] text-slate-400">Hẹn Analytics · synthetic workshop data · not production analytics</footer>
       </main>
     </div>

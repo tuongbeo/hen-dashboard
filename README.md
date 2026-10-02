@@ -90,10 +90,12 @@ Official references:
 - https://developers.cloudflare.com/pages/framework-guides/deploy-a-vite3-project/
 - https://developers.cloudflare.com/pages/configuration/custom-domains/
 
-## Hướng dẫn học viên
+## Hướng dẫn học viên & Facilitator
 
-The header now has accessible Dashboard / Hướng dẫn tabs. Dashboard remains the default view with the existing synthetic dataset. The Vietnamese guide contains fundamentals, a searchable-by-browser metric reference in expandable cards, a worked funnel example, prioritization dimensions, competing signals, workshop practice and a team reasoning template. It gives prompts rather than initiative rankings. Follow the facilitator's phase-specific evidence release.
+Header tabs: Dashboard (default), Hướng dẫn (sections 1–3: fundamentals, metric reference, funnel), Facilitator (expanded sections 4–6: dimensions/framework selection, trade-off scenarios and debrief, runbook and presentation assessment). Dashboard data remains unchanged.
 
-`src/components/DataGuide.jsx` renders the guide; `src/lib/guide.js` holds metric definitions, scope, limits, dimensions and discussion prompts. Undefined denominators/cohorts and unavailable raw baselines are explicitly identified rather than invented. Values reference the existing synthetic source and are maintained with it.
+Facilitator has a temporary password UI gate. The app verifies a SHA-256 digest with Web Crypto over HTTPS/localhost and loads the notes after unlocking. The password is not stored as plaintext in source. Unlock state exists only in React memory, persists across tab changes and resets on reload or “Khóa lại”. No user account, backend session or environment variable is required for deployment.
 
-Guide test plan: desktop/mobile tab switching, keyboard tab navigation, metric expansion, caveats, section anchors, horizontal overflow, console health and returning to the original dashboard. Run `npm run test:data`, `npm run build`, then `npm run test:e2e`.
+**This is not secure authentication.** The repository is public, notes are shipped as a downloadable static asset and client-side checks can be bypassed. Do not put confidential material here. Server-side access control (for example Cloudflare Access on a separate protected route) is needed for genuine restricted access. To rotate the temporary password, replace the digest in `src/lib/facilitatorAccess.js` and redeploy.
+
+Test plan: `npm run test:data`, `npm run build`, `npm run test:e2e`. Browser tests cover desktop/mobile tabs, keyboard navigation, metric expansion, scope caveats, wrong password, anchors and overflow. Set `HEN_FACILITATOR_PASSWORD` locally when running browser tests to also verify valid login, navigation persistence, lock and reload reset; do not commit its value. Without it, only the incorrect-password flow runs.
