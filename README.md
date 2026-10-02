@@ -89,3 +89,11 @@ No Worker, Pages Functions, API keys or database binding is required. Future pus
 Official references:
 - https://developers.cloudflare.com/pages/framework-guides/deploy-a-vite3-project/
 - https://developers.cloudflare.com/pages/configuration/custom-domains/
+
+## Hướng dẫn học viên
+
+The header now has accessible Dashboard / Hướng dẫn tabs. Dashboard remains the default view with the existing synthetic dataset. The Vietnamese guide contains fundamentals, a searchable-by-browser metric reference in expandable cards, a worked funnel example, prioritization dimensions, competing signals, workshop practice and a team reasoning template. It gives prompts rather than initiative rankings. Follow the facilitator's phase-specific evidence release.
+
+`src/components/DataGuide.jsx` renders the guide; `src/lib/guide.js` holds metric definitions, scope, limits, dimensions and discussion prompts. Undefined denominators/cohorts and unavailable raw baselines are explicitly identified rather than invented. Values reference the existing synthetic source and are maintained with it.
+
+Guide test plan: desktop/mobile tab switching, keyboard tab navigation, metric expansion, caveats, section anchors, horizontal overflow, console health and returning to the original dashboard. Run `npm run test:data`, `npm run build`, then `npm run test:e2e`.

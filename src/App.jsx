@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import DataGuide from './components/DataGuide'
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Line, LineChart,
   Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis
@@ -53,6 +55,8 @@ function SectionTitle({ icon: Icon, title, description }) {
 }
 
 function Dashboard() {
+  const [activeTab, setActiveTab] = useState('dashboard')
+  const switchTab = (tab) => { setActiveTab(tab); window.scrollTo({ top: 0, behavior: 'instant' }); window.history.replaceState(null, '', window.location.pathname + window.location.search) }
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -71,9 +75,14 @@ function Dashboard() {
             <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">All studios</div>
           </div>
         </div>
+        <div role="tablist" aria-label="Nội dung Hẹn Analytics" className="mx-auto flex max-w-[1500px] gap-2 px-4 pb-3 sm:px-6 lg:px-8">
+          {[['dashboard', 'Dashboard'], ['guide', 'Hướng dẫn']].map(([id, label], index) => <button key={id} id={`tab-${id}`} type="button" role="tab" aria-selected={activeTab === id} aria-controls={`panel-${id}`} tabIndex={activeTab === id ? 0 : -1} onClick={() => switchTab(id)} onKeyDown={event => { if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) { event.preventDefault(); const next = event.key === 'Home' ? 'dashboard' : event.key === 'End' ? 'guide' : index === 0 ? 'guide' : 'dashboard'; switchTab(next); document.getElementById(`tab-${next}`).focus() } }} className={`rounded-lg px-4 py-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 ${activeTab === id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{label}</button>)}
+        </div>
       </header>
 
       <main className="mx-auto max-w-[1500px] space-y-8 px-4 py-6 sm:px-6 lg:px-8">
+        {activeTab === 'dashboard' && <div role="tabpanel" id="panel-dashboard" aria-labelledby="tab-dashboard">
+        <div className="space-y-8">
         <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
           <div>
             <div className="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">Executive overview</div>
@@ -274,6 +283,9 @@ function Dashboard() {
           </Card>
         </section>
 
+        </div>
+        </div>}
+        {activeTab === 'guide' && <div role="tabpanel" id="panel-guide" aria-labelledby="tab-guide"><DataGuide /></div>}
         <footer className="border-t border-slate-200 py-5 text-center text-[11px] text-slate-400">Hẹn Analytics · synthetic workshop data · not production analytics</footer>
       </main>
     </div>
