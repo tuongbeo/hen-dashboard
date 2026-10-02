@@ -1,101 +1,122 @@
-# Hẹn Analytics Dashboard
+# Hẹn Analytics — evidence surface Buổi 2
 
-Single-page synthetic product analytics dashboard for a product-prioritization workshop. The dataset is intentionally designed so that multiple objectives can be defended from the same evidence.
+React + Vite + Tailwind CSS + local shadcn/ui-style Card primitives + Recharts. Synthetic data hardcoded, không backend/database/API. Không khởi tạo lại project.
 
-## Stack
+## Case contract
 
-- React + Vite
-- Tailwind CSS
-- shadcn/ui-style local primitives
-- Recharts
-- Static synthetic data (no backend, no database)
+Hẹn là B2B2C software: mỗi studio làm gốm, vẽ, cắm hoa hoặc thủ công có trang đặt chỗ riêng mang thương hiệu studio. Không phải marketplace tìm kiếm nhiều nhà cung cấp.
 
-## Local development
+- Parent outcome: tăng chỗ hoàn thành từ studios đã đăng ký và nhu cầu hiện có.
+- Một booking có nhiều seats; một customer có nhiều bookings. Studio/customer/booking/seat là các đơn vị khác nhau.
+- Completed seat = khách tham gia và được ghi nhận. Hủy/no-show/pending không phải completed. Booking created chỉ là tạo đơn.
+- Buổi 1: pilot 12 studios/8 tuần. Buổi 2: shared state sau ba tháng, không phải kết quả MVP từng team; total studios sau ba tháng chưa được cung cấp.
+- Baseline: H01/H02/H04/H05/H08 basic đã chạy. H03/H07/H10 nâng cao/H12/H19 chưa có. H05 basic chưa reminder, H12 chưa self-service reschedule.
+- 20 CU mới / 6 tuần, không tăng staffing vận hành hoặc acquisition budget. CU không quy đổi giờ/tuần; thẻ Phase 2 là scope mới.
+- Hẹn thu 8% giá trị completed seats. Giá 300.000 ₫ là tham chiếu; revenue không phải GMV/profit.
 
-```bash
-npm install
-npm run dev
-```
+## Nguồn đối chiếu và visibility
 
-## Production build
+Đã đối chiếu nội dung hiện hành:
+- Hen_Doc_Truoc_Workshop.pdf — 18.09.2026.
+- Hen_Phase_2_Participant_Pack.pdf — 17.09.2026.
+- Hen_Facilitator_Guide.pdf — bản cập nhật chương trình bốn buổi 02.10.2026.
+- Case contract trong yêu cầu chỉnh sửa là căn cứ; không khôi phục snapshot dashboard cũ.
 
-```bash
-npm run build
-```
+Dashboard và Hướng dẫn chỉ hiển thị dữ liệu, đơn vị, window, metric definitions và giới hạn. P2-A/B/C là ba vùng ngang cấp; không có priority badge, host confidence labels, scores hoặc mapping dimensions. Không hiển thị evidence tương lai.
 
-Output directory: `dist`
+Facilitator tab giữ password gate hiện có, không hardcode lại password. Notes cập nhật 115-minute runbook: baseline → đọc evidence → bottleneck → debate → converge → portfolio → reveal dimensions → logic 0.1 → mapping → debrief. Mapping chỉ ở facilitator mode, reveal sau activity, không biến cancellation thành đáp án chung.
 
-## Cloudflare Pages
+Client-side UI gate **không phải authentication bảo mật**. Notes là static asset trong public repo, có thể đọc/bypass. Không có dữ liệu nhạy cảm hoặc secret trong notes. Password digest và gate không đổi.
 
-Connect this GitHub repository to Cloudflare Pages:
+## Canonical dataset và dictionary
 
-- Framework preset: `Vite`
-- Build command: `npm run build`
-- Build output directory: `dist`
-- Environment variables: none
+Input hardcoded trong src/lib/data.js; derive KPI/chart/rate/delta/revenue từ các aggregates đó. Không hardcode một snapshot hiển thị khác. src/lib/dictionary.js là dictionary render trên student guide.
 
-## Workshop design intent
+### Anchors gốc
 
-The dashboard deliberately contains competing signals:
+| Nguồn | Input | Population / period | Giới hạn |
+|---|---|---|---|
+| P2-A | 28 chưa duyệt + 20 đã duyệt chưa lịch = 48 studios | Snapshot sau ba tháng; studios chưa onboarding | Chưa biết demand, total registered hoặc H03 giải quyết bao nhiêu |
+| P2-B | 180 cancelled seats, 90 liên quan cập nhật lịch/số chỗ muộn | Tháng gần nhất; seats hủy | 90/180 = 50% liên quan, không phải 90 recoverable; chưa biết root cause/eligibility H12 |
+| P2-B | Có câu hỏi đổi buổi và tìm vé | Qua nhân viên; không có counts gốc | Không suy ra mọi yêu cầu tự phục vụ được |
+| P2-C | 9/72 mở H04; interview nói cần report; email vẫn dùng | Tháng gần nhất; 72 studios được theo dõi | Không phải total active/registered; không cộng 48+72; chưa biết vì sao ít mở |
 
-- Bookings, GMV and active studios are growing.
-- Conversion is slightly deteriorating.
-- Cancellation and support load are rising sharply.
-- Repeat booking and studio activation are weak.
-- Studio operations still require substantial manual handling.
+H04 là report/dashboard của studio, không phải analytics workshop này.
 
-This allows different teams to select different priorities before converging on a shared objective.
+### Synthetic bổ sung — không gán cho PDF
 
-## Dashboard structure
+Ngày tháng 07–09/2026 chỉ là convention minh họa Tháng 1–3 sau ba tháng; không phải dates của tài liệu gốc. Cả ba tháng là calendar months không chồng lấn, không phải rolling/weekly snapshots.
 
-- `src/App.jsx`: single page with Executive KPI, Booking trend, Booking funnel, Cancellation trend/reasons, Customer behaviour, Studio operations, Business metrics, Support tickets and Evidence board.
-- `src/lib/data.js`: all hardcoded synthetic data. No API requests, backend or database.
-- `src/components/ui/`: local Card and Badge primitives inspired by shadcn/ui; no shadcn registry dependency.
-- `src/index.css`, `tailwind.config.js`: responsive analytics styling.
-- `tests/data.test.js`: checks funnel consistency, totals and competing growth/quality signals.
-- `tests/browser/dashboard.spec.js`: production preview smoke tests at desktop 1440px and mobile 390px, charts, section navigation, horizontal overflow and console errors.
-- `.github/workflows/verify.yml`: install, data checks, production build and Chromium QA on push to main.
+| Canonical inputs | Population, unit, period | Aggregation | Limitation |
+|---|---|---|---|
+| serviceRows | Confirmed booked seats có scheduled service date trong từng tháng, tất cả đã đến hạn tại cutoff | Price buckets; completed/cancelled/noShow/pending loại trừ nhau | Pending = đã đến hạn chưa phân loại; không gồm future seats. Tháng 3 cancelled derive từ 180 P2-B; tháng trước synthetic |
+| periods.completedStudios | Distinct studio có ≥1 completed seat trong service-month | Count aggregate: 26/32/37 | Không có raw studio IDs, total registered hoặc activation rate; không cộng qua tháng |
+| creationRows | Booking events, seats, booked VND, unique customers theo booking-created month | Counts/values aggregate; repeatCustomers có booking trước đầu tháng | Không reconcile seats tạo tháng này với service-month; không phải retention cohort 30d |
+| creationRows funnel | journey_id trong một studio-page session, entry theo tháng, follow-up 7 ngày | Visit → calendar → slot → created theo thứ tự; cùng cohort; max 1 booking/journey | Synthetic giả định tất cả creations thuộc cohort, được tạo cùng tháng entry. Không có creations ngoài cohort/sang tháng sau; không áp giả định này cho data thật |
+| supportRows | Tickets theo ngày tạo trong Tháng 3; một primary category mỗi ticket | Counts + total active handling minutes từng category | Counts/minutes đều bổ sung. Chưa có unique customers/bookings hoặc eligibility; không có ticket rate hoặc monetary cost |
 
-## Dataset semantics
+### Các giá trị kiểm chứng
 
-The source dashboard is preserved with two accuracy corrections: cancellation increases are shown as negative outcomes with an upward arrow, and the Studio view → Select slot loss is 59% of studio viewers (37.2 percentage points of all entrants).
+| Service-month | Completed | Cancelled | No-show | Pending | Booked seats | Completed-service value | Revenue 8% |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Tháng 1 | 910 | 120 | 60 | 30 | 1.120 | 263.200.000 ₫ | 21.056.000 ₫ |
+| Tháng 2 | 1.070 | 160 | 65 | 25 | 1.320 | 313.100.000 ₫ | 25.048.000 ₫ |
+| Tháng 3 | 1.180 | 180 | 70 | 20 | 1.450 | 365.200.000 ₫ | 29.216.000 ₫ |
 
-W1–W12 are weekly snapshots of rolling 30-day booking totals, not disjoint weekly totals; do not sum them. Executive KPI uses the latest 30-day window, with comparisons to W4. The funnel covers unique users over Q3 2026 and must not be equated to the latest booking-event KPI. Other metrics have their own comparison labels. Cancellation reason shares total 100%; support categories total 1,240 tickets. Targets are hypothetical training inputs, not mandated business goals. Interview and sales evidence are synthetic too. Growth, conversion, retention, manual work, support and revenue concentration intentionally compete for priority.
+Giá theo bucket: Tháng 1 250k/320k; Tháng 2 250k/330k; Tháng 3 280k/340k. Completed-service value = sum completed × price từng bucket; revenue = 8% value này. Không lấy booked GMV làm fee base.
 
-## Test plan
+Tháng 3 booking-created: 510 bookings, 1.520 seats, 467.000.000 ₫ booked GMV, 350 unique customers, 96 khách có booking trước đầu tháng. Funnel cùng journey cohort: 4.000 → 2.600 → 900 → 510. Đây là populations khác service-month.
 
-Use Node.js 22.12+ (`.node-version` selects Node 22).
+Support bổ sung: 200 tickets, tổng active handling time 3.800 phút; đổi buổi 62, tìm vé 48, hồ sơ 30, lịch/số chỗ 28, báo cáo 12, payment 20. Không có claim counts này từ P2-B.
 
-```bash
+### Formulas và unknown
+
+- Rate = count / đúng population ×100. Status rates dùng booked seats cohort service-date, không dùng booking count.
+- Funnel: từ đầu = step / Visit; chuyển tiếp = step / previous step.
+- KPI delta = (current − previous) / previous ×100; so tháng không chồng lấn và cùng convention của metric.
+- pp = rate current − rate previous; không thay thế % change.
+- Repeat context = customers có booking trước đầu tháng / unique customers tạo đơn tháng này.
+- Ratio/delta với denominator 0 trả null → Chưa đo; 0 quan sát thật vẫn là 0.
+- Chưa biết: total registered/active, overlap P2-A/C, demand 48 studios, phần 90 có thể phục hồi, nguyên nhân software/quy trình, H12 eligibility, lý do ít mở H04.
+- Chưa đo: full cost-to-serve bằng tiền, unique booking/customer support denominator. Không coi handling minutes là chi phí tiền.
+- Không cấp target thị trường, uplift feature hoặc expected impact/priority score.
+
+## Source structure
+
+- src/App.jsx: executive completed-seat overview, equal evidence panels, trend, studio-page funnel, post-booking cohort, studios/customer context, business, support.
+- src/lib/data.js: anchors, canonical aggregates và derived metrics.
+- src/lib/dictionary.js: unit/window/population/aggregation/source/limitation.
+- src/components/DataGuide.jsx: student definitions only.
+- src/components/FacilitatorGuide.jsx: Buổi 2 notes và late reveal.
+- src/components/FacilitatorGate.jsx, src/lib/facilitatorAccess.js: existing temporary gate unchanged.
+- tests/data.test.js: contract, anchors, cohorts, rates, fees, baseline and unknowns.
+- tests/browser/dashboard.spec.js: desktop/mobile rendered text and accessibility attributes, charts/tooltips, tabs/guide, console/overflow and hidden notes.
+
+## Development, build và test plan
+
+Node 22.12+; .node-version chọn Node 22.
+
+~~~bash
 npm install
 npm run test:data
 npm run build
 npx playwright install chromium
 npm run test:e2e
-```
+~~~
 
-CI runs these steps on Linux, installs Chromium system dependencies and uploads `dashboard-qa` with screenshots, the generated lockfile and `dist`. Chart tooltips work on hover; header period and studio scope are fixed labels, not filters. Section links navigate within the same page.
+Browser plugin not available; use project Playwright workflow. Desktop 1440×1000, mobile 390×1000. Valid-password browser flow chạy khi HEN_FACILITATOR_PASSWORD được đặt từ ngoài repo; không commit password. Không có env thì chỉ kiểm tra locked/wrong-password flow. CI chạy install, data tests, build, Chromium tests; upload dashboard-qa screenshots và dist.
 
-## Cloudflare deployment steps
+## Cloudflare Pages
 
-1. Open **Workers & Pages → Create application → Pages → Import from an existing Git repository**.
-2. Connect `tuongbeo/hen-dashboard`, select production branch `main`, and leave root directory at repository root.
-3. Framework: **Vite**; build command: **npm run build**; output directory: **dist**; environment variables: **none**.
-4. Save and Deploy. Cloudflare installs npm dependencies and creates the `pages.dev` URL.
-5. In the Pages project, open **Custom domains → Set up a domain** and enter the desired domain. Follow the DNS instructions. An apex domain requires the zone on Cloudflare; an externally managed subdomain can use a CNAME to the Pages hostname after association in the Pages project.
+| Setting | Value |
+|---|---|
+| Framework | Vite |
+| Build command | npm run build |
+| Output directory | dist |
+| Root | Repository root |
+| Environment variables | Không cần |
+| Production branch | main |
 
-No Worker, Pages Functions, API keys or database binding is required. Future pushes to `main` trigger deployments.
+Workers & Pages → Create application → Pages → Import Git repository; chọn tuongbeo/hen-dashboard, branch main, settings trên; Save and Deploy. Custom domains → Set up a domain để gắn domain. Main pushes kích hoạt deploy nếu project đã kết nối. Không cần Worker, Functions, API hoặc database.
 
-Official references:
-- https://developers.cloudflare.com/pages/framework-guides/deploy-a-vite3-project/
-- https://developers.cloudflare.com/pages/configuration/custom-domains/
-
-## Hướng dẫn học viên & Facilitator
-
-Header tabs: Dashboard (default), Hướng dẫn (sections 1–3: fundamentals, metric reference, funnel), Facilitator (expanded sections 4–6: dimensions/framework selection, trade-off scenarios and debrief, runbook and presentation assessment). Dashboard data remains unchanged.
-
-Facilitator has a temporary password UI gate. The app verifies a SHA-256 digest with Web Crypto over HTTPS/localhost and loads the notes after unlocking. The password is not stored as plaintext in source. Unlock state exists only in React memory, persists across tab changes and resets on reload or “Khóa lại”. No user account, backend session or environment variable is required for deployment.
-
-**This is not secure authentication.** The repository is public, notes are shipped as a downloadable static asset and client-side checks can be bypassed. Do not put confidential material here. Server-side access control (for example Cloudflare Access on a separate protected route) is needed for genuine restricted access. To rotate the temporary password, replace the digest in `src/lib/facilitatorAccess.js` and redeploy.
-
-Test plan: `npm run test:data`, `npm run build`, `npm run test:e2e`. Browser tests cover desktop/mobile tabs, keyboard navigation, metric expansion, scope caveats, wrong password, anchors and overflow. Set `HEN_FACILITATOR_PASSWORD` locally when running browser tests to also verify valid login, navigation persistence, lock and reload reset; do not commit its value. Without it, only the incorrect-password flow runs.
+Không tuyên bố đã deploy production chỉ từ build/CI; cần kiểm tra Cloudflare deployment riêng.

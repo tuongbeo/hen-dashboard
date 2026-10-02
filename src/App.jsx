@@ -1,298 +1,58 @@
-import { useState } from 'react'
-import FacilitatorGate from './components/FacilitatorGate'
+import {useState} from 'react'
+import {Area,AreaChart,Bar,BarChart,CartesianGrid,Line,LineChart,ResponsiveContainer,Tooltip,XAxis,YAxis} from 'recharts'
+import {Info,Layers3} from 'lucide-react'
+import {Card,CardContent,CardDescription,CardHeader,CardTitle} from './components/ui/card'
 import DataGuide from './components/DataGuide'
-import {
-  Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Line, LineChart,
-  Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis
-} from 'recharts'
-import { Activity, ArrowDownRight, ArrowUpRight, CalendarDays, CircleHelp, Layers3, TrendingUp, Users } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card'
-import { Badge } from './components/ui/badge'
-import {
-  kpis, bookingTrend, funnel, cancellationReasons, customerMetrics, studioOps,
-  supportTickets, businessMetrics, evidence
-} from './lib/data'
-
-const COLORS = ['#2563eb', '#0f766e', '#d97706', '#64748b']
-
-function Delta({ item }) {
-  const positive = item.direction === 'up'
-  const isBad = item.label.includes('Cancellation') ? positive : !positive
-  return (
-    <div className={`mt-2 flex items-center gap-1 text-xs font-medium ${isBad ? 'text-rose-600' : 'text-emerald-600'}`}>
-      {positive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-      {item.delta}
-      <span className="ml-1 font-normal text-slate-400">{item.note}</span>
-    </div>
-  )
+import FacilitatorGate from './components/FacilitatorGate'
+import {anchors,caseContract,evidenceCards,funnel,kpis,latest,money,number,outcomes,percent,previous,relativeChange,support,supportMinutes,supportTotal,trend} from './lib/data'
+const tabs=[['dashboard','Dashboard'],['guide','Hướng dẫn'],['facilitator','Facilitator']]
+const axis={axisLine:false,tickLine:false,tick:{fontSize:11}}
+function ChartCard({title,description,children}){return <Card><CardHeader><CardTitle>{title}</CardTitle><CardDescription>{description}</CardDescription></CardHeader><CardContent><div className="h-[280px]" aria-label={'Biểu đồ '+title}>{children}</div></CardContent></Card>}
+function Metric({title,value,detail}){return <div className="rounded-xl border bg-white p-4"><p className="text-xs text-slate-500">{title}</p><p className="mt-2 break-words text-xl font-semibold text-slate-950">{value}</p><p className="mt-2 text-xs leading-6 text-slate-500">{detail}</p></div>}
+function Section({id,title,description,children}){return <section id={id} className="scroll-mt-36 space-y-4"><div><h2 className="text-lg font-semibold text-slate-950">{title}</h2><p className="mt-1 text-sm leading-6 text-slate-500">{description}</p></div>{children}</section>}
+function DashboardContent(){return <div className="space-y-8">
+ <div><p className="text-xs uppercase tracking-widest text-slate-400">Sau ba tháng · trạng thái chung</p><h1 className="mt-2 text-3xl font-semibold">Kết quả vận hành Hẹn</h1><p className="mt-3 max-w-4xl text-sm leading-7 text-slate-600">{caseContract.model}</p></div>
+ <div className="rounded-xl border border-blue-200 bg-blue-50 p-5"><p className="font-semibold text-blue-950">Outcome: {caseContract.outcome}</p><p className="mt-2 text-sm leading-7 text-blue-900">{caseContract.capacityCU} CU mới / {caseContract.planningWeeks} tuần. Không tăng nhân sự vận hành hoặc ngân sách thu hút khách. CU không quy đổi thành tuần/giờ.</p><p className="mt-2 text-xs leading-6 text-blue-800">H01, H02, H04, H05, H08 bản cơ bản đã chạy; H03, H07, H10 nâng cao, H12, H19 chưa có. H05 basic chưa nhắc lịch. Scope trên thẻ Buổi 2 là phần mới. Đây không phải kết quả MVP riêng từng team; pilot Buổi 1 là 12 studios / 8 tuần.</p></div>
+ <p className="text-xs leading-6 text-slate-500">Tháng 1–3 ánh xạ 07–09/2026 để minh họa. Ngày và chuỗi số ngoài P2-A/B/C là synthetic bổ sung. Service-month theo ngày tham gia; booking-created month theo ngày tạo đơn. Số đã được tính sẵn; định nghĩa tại tab Hướng dẫn.</p>
+ <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{kpis.map(k=><Card key={k.label}><CardContent className="p-4"><div className="flex justify-between gap-2"><span className="text-xs text-slate-500">{k.label}</span><button type="button" aria-label={'Định nghĩa '+k.label} title={k.definition+' '+k.period+': '+latest.window+'. Đơn vị: '+k.unit+'. '+k.source} className="shrink-0 text-slate-500"><Info size={15}/></button></div><p className="mt-3 text-3xl font-semibold">{number(k.value)}</p><p className="mt-2 text-xs">{k.change>=0?'+':''}{percent(k.change)} so với Tháng 2</p><p className="mt-2 text-[11px] leading-5 text-slate-500">{k.period}: {latest.window} · {k.unit}</p><p className="mt-1 text-[11px] text-slate-400">{k.source}</p></CardContent></Card>)}</div>
+ <nav aria-label="Các vùng dữ liệu" className="flex flex-wrap gap-2">{[['evidence','P2-A/B/C'],['trend','Xu hướng'],['journey','Đặt chỗ'],['operations','Studios'],['business','Kinh doanh'],['support','Hỗ trợ']].map(([id,label])=><a key={id} href={'#'+id} className="rounded-lg border bg-white px-3 py-2 text-xs font-medium hover:border-blue-400">{label}</a>)}</nav>
+ <Section id="evidence" title="Ba vùng evidence của Buổi 2" description="Ba tập quan sát ngang cấp; không phải một funnel chung. Không cộng studio, customer, booking và seat."><div className="grid items-stretch gap-4 lg:grid-cols-3">{evidenceCards.map(card=><Card key={card.id}><CardHeader><p className="text-xs text-slate-500">{card.id} · Thẻ dữ kiện gốc</p><CardTitle>{card.title}</CardTitle></CardHeader><CardContent className="space-y-4 text-sm leading-7"><p className="text-2xl font-semibold text-slate-950">{card.value}</p><p>{card.observation}</p><p className="text-xs text-slate-500">{card.scope}</p><p className="text-xs text-slate-500">Phương thức: {card.method}</p><div className="rounded-lg bg-slate-50 p-3"><strong>Giới hạn quan sát:</strong> {card.limit}</div></CardContent></Card>)}</div></Section>
+ <Section id="trend" title="Xu hướng theo tháng" description="Các tháng không chồng lấn. Chỗ hoàn thành là outcome; số đơn là context và dùng kỳ đo riêng."><div className="grid gap-4 lg:grid-cols-2">
+ <ChartCard title="Chỗ hoàn thành theo service-month" description="Synthetic bổ sung · Tháng 1–3 (07–09/2026), service-month; seat đã tham gia và ghi nhận."><ResponsiveContainer width="100%" height="100%"><AreaChart data={trend}><CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="label" {...axis}/><YAxis {...axis} width={45}/><Tooltip formatter={v=>[number(v),'Chỗ hoàn thành']}/><Area dataKey="completed" name="Chỗ hoàn thành" stroke="#2563eb" fill="#dbeafe" strokeWidth={2}/></AreaChart></ResponsiveContainer></ChartCard>
+ <ChartCard title="Đơn được tạo theo tháng" description="Synthetic bổ sung · Tháng 1–3 (07–09/2026), booking-created month; tạo đơn chưa phải hoàn thành dịch vụ."><ResponsiveContainer width="100%" height="100%"><LineChart data={trend}><CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="label" {...axis}/><YAxis {...axis} width={45}/><Tooltip formatter={v=>[number(v),'Đơn được tạo']}/><Line dataKey="bookings" name="Đơn được tạo" stroke="#0f766e" strokeWidth={2}/></LineChart></ResponsiveContainer></ChartCard>
+ </div></Section>
+ <Section id="journey" title="Hành trình đặt chỗ trên trang studio" description={'Synthetic bổ sung · journey vào trang studio trong '+latest.window+'; follow-up 7 ngày. Tất cả bước dùng cùng cohort.'}>
+ <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{funnel.map((s,i)=><Card key={s.stage}><CardContent className="p-4"><p className="text-xs text-slate-500">Bước {i+1} · {s.stage}</p><h3 className="mt-2 text-sm font-semibold">{s.label}</h3><p className="mt-3 text-2xl font-semibold">{number(s.count)}</p><p className="mt-2 text-xs text-slate-500">{percent(s.fromStart)} từ lúc vào trang</p>{i>0&&<p className="mt-1 text-xs text-slate-500">{percent(s.fromPrevious)} từ bước trước</p>}<div className="mt-3 h-1.5 rounded bg-slate-100"><div className="h-full rounded bg-blue-600" style={{width:s.fromStart+'%'}}/></div></CardContent></Card>)}</div>
+ <p className="text-xs leading-6 text-slate-500">Journey là session trên trang riêng của một studio, không phải unique customer. Booking created là tạo đơn thành công, không phải tham gia. Drop-off chưa cho biết nguyên nhân.</p>
+ <div className="grid gap-4 lg:grid-cols-2"><ChartCard title="Sau đặt chỗ: trạng thái seat" description={number(latest.booked)+' booked seats theo service date '+latest.window+', đã đến hạn. Synthetic bổ sung; chỗ hủy giữ P2-B.'}><ResponsiveContainer width="100%" height="100%"><BarChart data={outcomes} layout="vertical"><CartesianGrid horizontal={false} strokeDasharray="3 3"/><XAxis type="number" {...axis}/><YAxis dataKey="name" type="category" width={116} {...axis}/><Tooltip formatter={v=>[number(v),'Seats']}/><Bar dataKey="count" name="Seats" fill="#334155" radius={[0,4,4,0]}/></BarChart></ResponsiveContainer></ChartCard>
+ <Card><CardHeader><CardTitle>Đọc trạng thái theo cùng cohort</CardTitle><CardDescription>Không chia cancelled seats cho booking count. Future seats không thuộc cohort này.</CardDescription></CardHeader><CardContent className="space-y-3">{outcomes.map(r=><div key={r.name} className="flex justify-between gap-3 border-b pb-2 text-sm"><span>{r.name}</span><span className="shrink-0 font-medium">{number(r.count)} · {percent(r.rate)}</span></div>)}<p className="text-xs leading-6 text-slate-500">Tổng = {number(latest.booked)} seats. Chờ ghi nhận là đã đến hạn chưa phân loại. Tỷ lệ hủy: {percent(latest.cancellationRate)} so với {percent(previous.cancellationRate)} Tháng 2. Chỗ hủy theo tháng: {trend.map(r=>r.label+': '+number(r.cancelled)).join(' · ')}. Tháng 1–2 là synthetic bổ sung.</p></CardContent></Card></div>
+ </Section>
+ <Section id="operations" title="Studios và hành vi sử dụng" description="Giữ populations của từng quan sát; tổng registered/active studios chưa biết.">
+ <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+ <Metric title="Chưa duyệt hồ sơ · P2-A" value={number(anchors.onboarding.awaitingApproval)} detail="Studios chưa duyệt. H03 chưa có; không hiển thị adoption tự điền hồ sơ."/>
+ <Metric title="Đã duyệt, chưa có lịch · P2-A" value={number(anchors.onboarding.approvedWithoutCalendar)} detail="Nhóm riêng trong 48 studios; hồ sơ được duyệt chưa đồng nghĩa mở bán hoặc có khách."/>
+ <Metric title="Mở H04 · P2-C" value={number(anchors.studioReport.opened)+'/'+number(anchors.studioReport.tracked)} detail="Tập đo H04 tháng gần nhất; email report vẫn dùng. Không phải total studios."/>
+ <Metric title="Đổi buổi đủ điều kiện H12" value="Chưa biết" detail="Có yêu cầu qua nhân viên. H12 chưa có; không có self-service usage. H05 basic chưa reminder."/>
+ </div><div className="grid gap-3 sm:grid-cols-2">
+ <Metric title="Khách đặt lại · context" value={percent(latest.repeatRate)} detail={'Synthetic bổ sung · '+latest.window+'; khách có booking trước đầu tháng / customers tạo booking trong tháng. Không phải retention cohort 30d.'}/>
+ <Metric title="Đơn / khách · context" value={new Intl.NumberFormat('vi-VN',{maximumFractionDigits:2}).format(latest.bookingsPerCustomer)} detail={'Synthetic bổ sung · '+number(latest.bookings)+' bookings / '+number(latest.customers)+' unique customers có tạo đơn trong '+latest.window+'. Một khách có thể nhiều đơn.'}/>
+ </div></Section>
+ <Section id="business" title="Giá trị dịch vụ và doanh thu" description={'Phí Hẹn = '+percent(caseContract.feeRate*100)+' giá trị chỗ hoàn thành. '+money(caseContract.referenceSeatPrice)+'/chỗ chỉ là giá tham chiếu; giá seats có thể khác nhau.'}>
+ <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+ <Metric title="Booked GMV" value={money(latest.bookedGMV)} detail={'Synthetic bổ sung · đơn tạo trong '+latest.window+'; gross trước hủy/refund; có thể phục vụ tháng khác.'}/>
+ <Metric title="Giá trị dịch vụ hoàn thành" value={money(latest.completedValue)} detail={'Synthetic bổ sung · service-month '+latest.window+'; tổng completed seats × giá từng nhóm.'}/>
+ <Metric title="Doanh thu phí Hẹn" value={money(latest.revenue)} detail={percent(caseContract.feeRate*100)+' × giá trị hoàn thành; +'+percent(relativeChange(latest.revenue,previous.revenue))+' so Tháng 2. Giả định chỉ có nguồn phí này. Trước chi phí; không phải profit.'}/>
+ <Metric title="Cost-to-serve bằng tiền" value="Chưa đo" detail="Chưa có cost components đầy đủ. Thời gian xử lý tickets không phải toàn bộ chi phí."/>
+ </div><ChartCard title="Doanh thu theo service-month" description={'Synthetic bổ sung · Tháng 1–3 (07–09/2026), service-month · VND; phí '+percent(caseContract.feeRate*100)+' của completed seats. Context kinh doanh.'}><ResponsiveContainer width="100%" height="100%"><AreaChart data={trend}><CartesianGrid vertical={false} strokeDasharray="3 3"/><XAxis dataKey="label" {...axis}/><YAxis {...axis} width={55} tickFormatter={v=>v/1000000+'tr'}/><Tooltip formatter={v=>[money(v),'Doanh thu phí']}/><Area dataKey="revenue" name="Doanh thu phí" stroke="#0f766e" fill="#ccfbf1" strokeWidth={2}/></AreaChart></ResponsiveContainer></ChartCard>
+ </Section>
+ <Section id="support" title="Câu hỏi qua nhân viên" description={'P2-B xác nhận có câu hỏi đổi buổi/tìm vé. Counts, phân loại và minutes bên dưới là synthetic bổ sung trong '+latest.window+', không phải số từ thẻ gốc.'}>
+ <div className="grid gap-4 lg:grid-cols-2"><ChartCard title="Support tickets theo nhóm" description={number(supportTotal)+' tickets; một nhóm chính mỗi ticket, không phải unique customers/bookings.'}><ResponsiveContainer width="100%" height="100%"><BarChart data={support} layout="vertical"><CartesianGrid horizontal={false} strokeDasharray="3 3"/><XAxis type="number" {...axis}/><YAxis dataKey="name" type="category" width={106} {...axis}/><Tooltip formatter={v=>[number(v),'Tickets']}/><Bar dataKey="tickets" name="Tickets" fill="#64748b" radius={[0,4,4,0]}/></BarChart></ResponsiveContainer></ChartCard>
+ <Card><CardHeader><CardTitle>Phạm vi đã đo và chưa đo</CardTitle></CardHeader><CardContent className="space-y-4 text-sm leading-7"><p>Tổng active handling time: <strong>{number(supportMinutes)} phút</strong> (synthetic bổ sung), không phải toàn bộ workload vận hành.</p><p>Customers/bookings liên quan: <strong>Chưa đo</strong>. Không có ticket rate theo booking.</p><p>Yêu cầu đủ điều kiện H12: <strong>Chưa biết</strong>. Không coi mọi yêu cầu có thể tự phục vụ.</p><p>Người hủy, nhóm ticket hoặc liên quan cập nhật muộn không tự chứng minh root cause.</p></CardContent></Card></div>
+ </Section>
+ </div>}
+export default function App(){
+ const [activeTab,setActiveTab]=useState('dashboard'),[facilitatorUnlocked,setFacilitatorUnlocked]=useState(false)
+ const switchTab=id=>{setActiveTab(id);window.scrollTo({top:0,behavior:'instant'});window.history.replaceState(null,'',window.location.pathname+window.location.search)}
+ return <div className="min-h-screen bg-slate-50 text-slate-700"><header className="sticky top-0 z-10 border-b bg-white/95 backdrop-blur"><div className="mx-auto flex max-w-[1500px] items-center gap-3 px-4 py-3 sm:px-6 lg:px-8"><div className="rounded-lg bg-slate-950 p-2 text-white"><Layers3 size={22}/></div><div><div className="font-semibold text-slate-950">Hẹn Analytics</div><p className="text-xs text-slate-500">Dữ liệu vận hành · Buổi 2</p></div></div><div role="tablist" aria-label="Nội dung Hẹn Analytics" className="mx-auto flex max-w-[1500px] gap-2 px-4 pb-3 sm:px-6 lg:px-8">{tabs.map(([id,label],i)=><button key={id} id={'tab-'+id} role="tab" aria-selected={activeTab===id} aria-controls={'panel-'+id} tabIndex={activeTab===id?0:-1} onClick={()=>switchTab(id)} onKeyDown={e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();const j=e.key==='Home'?0:e.key==='End'?tabs.length-1:(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length;switchTab(tabs[j][0]);document.getElementById('tab-'+tabs[j][0]).focus()}}} className={'rounded-lg px-4 py-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 '+(activeTab===id?'bg-blue-600 text-white':'bg-slate-100 text-slate-600')}>{label}</button>)}</div></header>
+ <main className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8"><div role="tabpanel" id={'panel-'+activeTab} aria-labelledby={'tab-'+activeTab}>{activeTab==='dashboard'&&<DashboardContent/>}{activeTab==='guide'&&<DataGuide/>}{activeTab==='facilitator'&&<FacilitatorGate unlocked={facilitatorUnlocked} onUnlock={()=>setFacilitatorUnlocked(true)} onLock={()=>setFacilitatorUnlocked(false)}/>}</div><footer className="mt-10 border-t py-5 text-center text-xs text-slate-500">Hẹn · case giả định · P2-A/B/C từ Participant Pack; dữ liệu bổ sung được ghi rõ · không phải số liệu thực</footer></main></div>
 }
-
-function KPIGrid() {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-      {kpis.map((item) => (
-        <Card key={item.label}>
-          <CardContent className="p-4">
-            <div className="text-xs font-medium text-slate-500">{item.label}</div>
-            <div className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{item.value}</div>
-            <Delta item={item} />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  )
-}
-
-function SectionTitle({ icon: Icon, title, description }) {
-  return (
-    <div className="flex items-start gap-3">
-      <div className="rounded-lg border border-slate-200 bg-white p-2 text-slate-600 shadow-sm"><Icon size={17} /></div>
-      <div>
-        <h2 className="text-base font-semibold text-slate-950">{title}</h2>
-        <p className="mt-0.5 text-xs text-slate-500">{description}</p>
-      </div>
-    </div>
-  )
-}
-
-function Dashboard() {
-  const [activeTab, setActiveTab] = useState('dashboard')
-  const [facilitatorUnlocked, setFacilitatorUnlocked] = useState(false)
-  const switchTab = (tab) => { setActiveTab(tab); window.scrollTo({ top: 0, behavior: 'instant' }); window.history.replaceState(null, '', window.location.pathname + window.location.search) }
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-950 text-sm font-bold text-white">H</div>
-            <div>
-              <div className="text-sm font-semibold text-slate-950">Hẹn Analytics</div>
-              <div className="text-[11px] text-slate-500">Product performance · workshop dataset</div>
-            </div>
-          </div>
-          <div className="hidden items-center gap-2 sm:flex">
-            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
-              <CalendarDays size={14} /> 01 Jul – 30 Sep 2026
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">All studios</div>
-          </div>
-        </div>
-        <div role="tablist" aria-label="Nội dung Hẹn Analytics" className="mx-auto flex max-w-[1500px] gap-2 px-4 pb-3 sm:px-6 lg:px-8">
-          {[['dashboard', 'Dashboard'], ['guide', 'Hướng dẫn'], ['facilitator', 'Facilitator']].map(([id, label], index) => <button key={id} id={`tab-${id}`} type="button" role="tab" aria-selected={activeTab === id} aria-controls={`panel-${id}`} tabIndex={activeTab === id ? 0 : -1} onClick={() => switchTab(id)} onKeyDown={event => { if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) { event.preventDefault(); const ids = ['dashboard', 'guide', 'facilitator']; const next = event.key === 'Home' ? ids[0] : event.key === 'End' ? ids[2] : ids[(index + (event.key === 'ArrowRight' ? 1 : 2)) % 3]; switchTab(next); document.getElementById(`tab-${next}`).focus() } }} className={`rounded-lg px-4 py-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 ${activeTab === id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{label}</button>)}
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-[1500px] space-y-8 px-4 py-6 sm:px-6 lg:px-8">
-        {activeTab === 'dashboard' && <div role="tabpanel" id="panel-dashboard" aria-labelledby="tab-dashboard">
-        <div className="space-y-8">
-        <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
-          <div>
-            <div className="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">Executive overview</div>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">Platform performance</h1>
-            <p className="mt-1 max-w-2xl text-sm text-slate-500">Synthetic dataset for prioritization training. Data is intentionally mixed: growth is healthy while several experience and operation signals deteriorate.</p>
-          </div>
-          <Badge tone="info">Static · Q3 2026</Badge>
-        </div>
-
-        <p className="text-xs text-slate-500">Executive KPI: latest 30-day window versus W4; other comparisons are labelled per metric. Targets are workshop hypotheses, not an agreed objective.</p>
-        <KPIGrid />
-        <nav aria-label="Dashboard sections" className="flex flex-wrap gap-2">
-          {["Growth", "Customers", "Operations", "Business", "Evidence"].map((label, i) => <a key={label} href={`#section-${i}`} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:border-blue-400 hover:text-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600">{label}</a>)}
-        </nav>
-
-        <section id="section-0" className="scroll-mt-24 space-y-3">
-          <SectionTitle icon={TrendingUp} title="Growth & booking quality" description="12 weekly snapshots of rolling 30-day bookings and cancellation rates." />
-          <div className="grid gap-4 xl:grid-cols-5">
-            <Card className="xl:col-span-3">
-              <CardHeader>
-                <CardTitle>Booking trend</CardTitle>
-                <CardDescription>Rolling 30-day booking count at each weekly snapshot; do not sum these overlapping windows.</CardDescription>
-              </CardHeader>
-              <CardContent className="h-[300px] pt-3">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={bookingTrend}>
-                    <defs>
-                      <linearGradient id="bookings" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#2563eb" stopOpacity={0.25}/>
-                        <stop offset="95%" stopColor="#2563eb" stopOpacity={0.02}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                    <XAxis dataKey="week" axisLine={false} tickLine={false} />
-                    <YAxis axisLine={false} tickLine={false} width={48} tickFormatter={(v) => `${Math.round(v/1000)}k`} />
-                    <Tooltip formatter={(v) => Number(v).toLocaleString()} />
-                    <Area type="monotone" dataKey="bookings" stroke="#2563eb" strokeWidth={2.5} fill="url(#bookings)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card className="xl:col-span-2">
-              <CardHeader>
-                <CardTitle>Cancellation rate</CardTitle>
-                <CardDescription>Quality deteriorates as booking volume increases.</CardDescription>
-              </CardHeader>
-              <CardContent className="h-[300px] pt-3">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={bookingTrend}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                    <XAxis dataKey="week" axisLine={false} tickLine={false} />
-                    <YAxis domain={[14, 26]} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
-                    <Tooltip formatter={(v) => `${v}%`} />
-                    <Line type="monotone" dataKey="cancellation" stroke="#e11d48" strokeWidth={2.5} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-
-        <section id="section-1" className="scroll-mt-24 space-y-3">
-          <SectionTitle icon={Users} title="Booking funnel & customer behaviour" description="Where customers drop, return, reschedule and fail to show up." />
-          <div className="grid gap-4 xl:grid-cols-5">
-            <Card className="xl:col-span-3">
-              <CardHeader>
-                <CardTitle>Booking funnel</CardTitle>
-                <CardDescription>90-day unique-user funnel; distinct from the rolling 30-day booking KPI.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-3 sm:grid-cols-4">
-                  {funnel.map((step, idx) => (
-                    <div key={step.stage} className="relative rounded-xl border border-slate-200 bg-slate-50 p-4">
-                      <div className="text-[11px] font-medium uppercase tracking-wide text-slate-400">Step {idx + 1}</div>
-                      <div className="mt-2 text-lg font-semibold text-slate-950">{step.users.toLocaleString()}</div>
-                      <div className="mt-1 text-xs text-slate-600">{step.stage}</div>
-                      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-blue-600" style={{ width: `${step.rate}%` }} /></div>
-                      <div className="mt-1 text-[11px] text-slate-400">{step.rate}% of visits</div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="xl:col-span-2">
-              <CardHeader>
-                <CardTitle>Customer behaviour</CardTitle>
-                <CardDescription>Selected outcome and feature-adoption signals.</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                {customerMetrics.map((m) => (
-                  <div key={m.label} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5">
-                    <div><div className="text-xs font-medium text-slate-700">{m.label}</div><div className="text-[11px] text-slate-400">vs. previous period</div></div>
-                    <div className="text-right"><div className="text-base font-semibold text-slate-950">{m.value}</div><Badge tone={m.tone}>{m.delta}</Badge></div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-
-        <section id="section-2" className="scroll-mt-24 space-y-3">
-          <SectionTitle icon={Activity} title="Cancellation & studio operations" description="Cancellation drivers sit alongside operational friction on the studio side." />
-          <div className="grid gap-4 xl:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Cancellation reasons</CardTitle>
-                <CardDescription>61% of all cancellations happen within 6 hours of the appointment.</CardDescription>
-              </CardHeader>
-              <CardContent className="grid items-center gap-4 sm:grid-cols-2">
-                <div className="h-[250px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={cancellationReasons} dataKey="value" nameKey="name" innerRadius={55} outerRadius={85} paddingAngle={2}>
-                        {cancellationReasons.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                      </Pie>
-                      <Tooltip formatter={(v) => `${v}%`} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="space-y-2.5">
-                  {cancellationReasons.map((r, i) => (
-                    <div key={r.name} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{ background: COLORS[i] }} /><span className="text-slate-600">{r.name}</span></div>
-                      <span className="font-semibold text-slate-900">{r.value}%</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Studio operations</CardTitle>
-                <CardDescription>Operational rates versus internal target.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                {studioOps.map((m) => (
-                  <div key={m.name}>
-                    <div className="mb-2 flex items-center justify-between text-xs"><span className="font-medium text-slate-700">{m.name}</span><span className="text-slate-500">{m.value}% <span className="text-slate-300">/</span> target {m.target}%</span></div>
-                    <div className="relative h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-slate-800" style={{ width: `${m.value}%` }} /><span className="absolute top-[-3px] h-4 w-0.5 bg-blue-500" style={{ left: `${m.target}%` }} /></div>
-                  </div>
-                ))}
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">Median onboarding time: <strong>6.8 days</strong> · target &lt;3 days</div>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-
-        <section id="section-3" className="scroll-mt-24 space-y-3">
-          <SectionTitle icon={Layers3} title="Business & support" description="Commercial growth remains positive, but cost-to-serve and support load are rising." />
-          <div className="grid gap-4 xl:grid-cols-5">
-            <Card className="xl:col-span-2">
-              <CardHeader><CardTitle>Business snapshot</CardTitle><CardDescription>Selected commercial metrics.</CardDescription></CardHeader>
-              <CardContent className="grid gap-3 sm:grid-cols-2">
-                {businessMetrics.map((m) => (
-                  <div key={m.label} className="rounded-lg border border-slate-200 p-3">
-                    <div className="text-xs text-slate-500">{m.label}</div>
-                    <div className="mt-1 text-xl font-semibold text-slate-950">{m.value}</div>
-                    <div className="mt-1 text-[11px] text-slate-400">{m.delta}</div>
-                  </div>
-                ))}
-                <div className="sm:col-span-2 rounded-lg bg-slate-950 px-4 py-3 text-xs text-white"><strong>63% of GMV</strong> comes from the top 20% of active studios.</div>
-              </CardContent>
-            </Card>
-
-            <Card className="xl:col-span-3">
-              <CardHeader><CardTitle>Support tickets</CardTitle><CardDescription>1,240 tickets/month · +32% versus previous period.</CardDescription></CardHeader>
-              <CardContent className="h-[280px] pt-3">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={supportTickets} layout="vertical" margin={{ left: 25 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
-                    <XAxis type="number" axisLine={false} tickLine={false} />
-                    <YAxis dataKey="category" type="category" axisLine={false} tickLine={false} width={125} />
-                    <Tooltip formatter={(v) => `${v} tickets`} />
-                    <Bar dataKey="tickets" fill="#334155" radius={[0, 5, 5, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-
-        <section id="section-4" className="scroll-mt-24 space-y-3">
-          <SectionTitle icon={CircleHelp} title="Evidence board" description="Not every signal has the same evidence strength. Use this board to challenge assumptions." />
-          <Card>
-            <CardContent className="overflow-x-auto p-0">
-              <table className="w-full min-w-[760px] border-collapse text-left text-xs">
-                <thead className="bg-slate-50 text-slate-500"><tr><th className="px-5 py-3 font-medium">Source</th><th className="px-5 py-3 font-medium">Finding</th><th className="px-5 py-3 font-medium">Evidence strength</th></tr></thead>
-                <tbody>
-                  {evidence.map((row) => (
-                    <tr key={row.source} className="border-t border-slate-100"><td className="px-5 py-3 font-medium text-slate-700">{row.source}</td><td className="px-5 py-3 text-slate-600">{row.finding}</td><td className="px-5 py-3"><Badge tone={row.confidence === 'High' ? 'positive' : row.confidence === 'Medium' ? 'warning' : 'neutral'}>{row.confidence}</Badge></td></tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
-        </section>
-
-        </div>
-        </div>}
-        {activeTab === 'guide' && <div role="tabpanel" id="panel-guide" aria-labelledby="tab-guide"><DataGuide /></div>}
-        {activeTab === 'facilitator' && <div role="tabpanel" id="panel-facilitator" aria-labelledby="tab-facilitator"><FacilitatorGate unlocked={facilitatorUnlocked} onUnlock={() => setFacilitatorUnlocked(true)} onLock={() => setFacilitatorUnlocked(false)} /></div>}
-        <footer className="border-t border-slate-200 py-5 text-center text-[11px] text-slate-400">Hẹn Analytics · synthetic workshop data · not production analytics</footer>
-      </main>
-    </div>
-  )
-}
-
-export default Dashboard
